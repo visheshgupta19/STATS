@@ -1,0 +1,356 @@
+# STAT 440: Homework 05
+### Spring 2021, D. Unger
+### Due: Monday, April 26 by 11:00 PM CT
+
+
+# Assignment
+
+All students (both undergraduate and graduate) are expected to complete **Exercises 1-10**. 
+
+For these Exercises, use only SQL within your statistical data program. Importing the data into your data program of choice may be done without using SQL. Use the URLs (not local files) to access the data.
+
+### Exercise 1
+(Accessing and importing data, Exploring file formats and different types of data)
+
+For this exercise, you will use a data set called `baseball`. It contains salary and performance information for Major League Baseball players (excluding pitchers) who played at least one game in both the 1986 and 1987 seasons (Time Inc. 1987). The salaries are for the 1987 season, and the performance measures are from the 1986 season.
+
+It is available at https://uofi.box.com/shared/static/w8tycn7kn21vz88qh0euce2mwg76t0d9.csv.
+
+Var# | Name | Type | Label
+---|---|---|---
+1 | Name | Char | Player's Name
+2 | Team | Char | Team at the End of 1986
+3 | nAtBat | Num | Times at Bat in 1986
+4 | nHits | Num | Hits in 1986
+5 | nHome | Num | Home Runs in 1986
+6 | nRuns | Num | Runs in 1986
+7 | nRBI | Num | RBIs in 1986
+8 | nBB | Num | Walks in 1986
+9 | YrMajor | Num | Years in the Major Leagues
+10 | CrAtBat | Num | Career Times at Bat
+11 | CrHits | Num | Career Hits
+12 | CrHome | Num | Career Home Runs
+13 | CrRuns | Num | Career Runs
+14 | CrRbi | Num | Career RBIs
+15 | CrBB | Num | Career Walks
+16 | League | Char | League at the End of 1986
+17 | Division | Char | Division at the End of 1986
+18 | Position | Char | Position(s) in 1986
+19 | nOuts | Num | Put Outs in 1986
+20 | nAssts | Num | Assists in 1986
+21 | nError | Num | Errors in 1986
+22 | Salary | Num | 1987 Salary in $ Thousands
+23 | Div | Char | League and Division
+24 | logSalary | Num | Log Salary
+
+Import the data in your data program of choice and print the descriptor portion.
+```{r}
+library(readr)
+baseball = read_csv("https://uofi.box.com/shared/static/w8tycn7kn21vz88qh0euce2mwg76t0d9.csv")
+str(baseball)
+```
+
+### Exercise 2
+(Intro to SQL, Assigning data in SQL, Subsetting data in SQL, Arranging data in SQL, Summarizing data in SQL)
+
+Based on the `baseball` data set created in **Exercise 1**, how many players made more than $2 millionin the 1987 season? Print a table of all players who make more than $2 million. Include only the players' names, team, position, and salary (in thousands of dollars).
+```{r}
+library(tidyverse)
+#install.packages("sqldf")
+library(sqldf)
+```
+
+
+```{r}
+twomil = sqldf("
+  SELECT Name,Team,Position,Salary 
+    FROM baseball
+    WHERE Salary>2000
+  ") 
+twomil
+nrow(twomil)
+```
+
+### Exercise 3
+(Intro to SQL, Assigning data in SQL, Subsetting data in SQL, Arranging data in SQL, Data validating in SQL, Data cleaning in SQL, Summarizing data in SQL) 
+
+Based on the `baseball` data set created in **Exercise 1**, address the following questions.
+
+a. How many players play each Position? Create a frequency table of only those Positions that have at least 10 players.
+
+b. Do the values of Position all seem to be valid, or instead do any of the values seem invalid? Create a frequency table of only those Positions that have fewer than 10 players. After that create another table using Markdown to offer your best guess as to what the values shown here should be. Maybe you believe one of the values is fine as is. Maybe you believe that it should be cleaned to become one of the others from the table in part a. You don't have to get this perfectly correct. Your best attempt is what I'm looking for.
+
+```{r}
+new_baseball_1 = sqldf("
+  SELECT Position, COUNT(Position) AS Frequency 
+    FROM baseball
+    GROUP BY Position
+    ORDER BY COUNT(Position) desc 
+  ") 
+new_baseball_2 = sqldf("
+  SELECT *
+    FROM new_baseball_1
+    WHERE Frequency>9
+  ") 
+new_baseball_2
+new_baseball_3 = sqldf("
+  SELECT *
+    FROM new_baseball_1
+    WHERE Frequency<10
+  ")
+new_baseball_3
+```
+We can come to the conclusion that:
+
+Position | Frequency
+---------|----------
+C        |    42
+3B       |    38
+2B       |    32
+1B       |    35
+SS       |    37
+OF       |    40
+RF       |    26
+CF       |    26
+LF       |    25
+DH       |    20
+### Exercise 4
+(Accessing and importing data, Exploring file formats and different types of data) Import the 1996 NBA Season Data (existing as three separate data sets) 
+
+Import the 1996 NBA Season Data (existing as three separate data sets) using one programming language software and the data URLs [stint1](https://uofi.box.com/shared/static/vytgfoo28wf9q4tct61j3sk02pwpsjsn.json), [stint2](https://uofi.box.com/shared/static/3zu8hqubabw8hxqt14qwjpeginf2orgo.json), and [stint3](https://uofi.box.com/shared/static/cfqaufkt73f8iej2v4pf2bsc4b6ok955.json). Now, print the descriptor portion of each dataset. 
+
+The dataset (three .json files) contains a total of 441 unique observations and 25 columns. The observations are professional basketball players in the National Basketball Association (NBA) and their season statistics for the 1996-1997 season. A stint is the duration of time someone worked for a particular employer. In this basketball data, a stint is a number representing the time a player was with a particular team. Some players are traded during the season, which means they would have more than 1 stint. A player's basketball statistics start over for each stint they have in a season. There are 441 unique playerIDs across all stints. The original source is the NBA and Sports Reference.
+
+```{r}
+library(htm2txt)
+stint1 = jsonlite::fromJSON("https://uofi.box.com/shared/static/vytgfoo28wf9q4tct61j3sk02pwpsjsn.json")
+stint2 = jsonlite::fromJSON("https://uofi.box.com/shared/static/3zu8hqubabw8hxqt14qwjpeginf2orgo.json")
+stint3 = jsonlite::fromJSON("https://uofi.box.com/shared/static/cfqaufkt73f8iej2v4pf2bsc4b6ok955.json")
+str(stint1)
+str(stint2)
+str(stint3)
+stint1$AST = as.double(stint1$AST)
+stint1$TOV = as.double(stint1$TOV)
+stint1$PTS = as.double(stint1$PTS)
+stint1$MP = as.double(stint1$MP)
+stint1$ThreeP = as.double(stint1$ThreeP)
+stint1$ThreePA = as.double(stint1$ThreePA)
+
+stint2$AST = as.double(stint2$AST)
+stint2$TOV = as.double(stint2$TOV)
+stint2$PTS = as.double(stint2$PTS)
+stint2$MP = as.double(stint2$MP)
+stint2$ThreeP = as.double(stint2$ThreeP)
+stint2$ThreePA = as.double(stint2$ThreePA)
+
+stint3$AST = as.double(stint3$AST)
+stint3$TOV = as.double(stint3$TOV)
+stint3$PTS = as.double(stint3$PTS)
+stint3$MP = as.double(stint3$MP)
+stint3$ThreeP = as.double(stint3$ThreeP)
+stint3$ThreePA = as.double(stint3$ThreePA)
+
+str(stint1)
+str(stint2)
+str(stint3)
+```
+
+### Exercise 5
+(Intro to SQL, Assigning data in SQL, Subsetting data in SQL, Arranging data in SQL, Data validating in SQL, Data cleaning in SQL, Combining data in SQL, Summarizing data in SQL) 
+
+Beginning with the three NBA data sets in **Exercise 4** and the information in the link https://uofi.box.com/shared/static/enzji09o5iz1butp3763mcnbaeoyimaa.pdf, do the following:
+
+- combine the three data sets into a single data set named "nba1996_1"
+
+- keep the unique players such that those with latest stints are present, thus removing a player's earlier stints
+
+- create a new variable called "ato" that represents the assists to turnovers ratio (assists divided by turnovers)
+
+- create a new variable called "ptm" that represents the points to minutes played ratio (points divided by minutes played)
+
+- create a new variable called "threeptpercentage" that represents three-point shots made out of three-point attempts multiplied by 100
+
+Now, print the first 5 observations of "nba1996_1" such that the data is sorted by ptm in descending order then player ID alphabetically and showing the following columns only: player name, player ID, position, age, ptm. *These columns should be visible in the print out.*
+```{r}
+xyz = sqldf("
+  SELECT *
+  FROM   stint1
+  UNION
+  SELECT *
+  FROM   stint2 
+  ")
+nba1996_1 = sqldf("
+  SELECT *
+  FROM   xyz
+  UNION
+  SELECT *
+  FROM   stint3
+  ")
+names(nba1996_1)
+nba1996_1 = sqldf("
+  SELECT *,(AST/TOV) as ato, (PTS/MP) as ptm, (ThreeP/ThreePA)*100 as threeptpercentage
+  FROM   nba1996_1
+  ORDER BY stint desc
+  ")
+nba1996_1 =sqldf("
+  SELECT *
+  FROM   nba1996_1
+  GROUP BY Player
+  ")
+nba1996_1 = sqldf("
+  SELECT Player, PlayerID, Pos, Age, ptm
+  FROM   nba1996_1
+  ORDER BY ptm desc, PlayerID
+  ")
+str(nba1996_1)
+head(nba1996_1,n=5)
+```
+
+### Exercise 6
+(Intro to SQL, Assigning data in SQL, Subsetting data in SQL, Arranging data in SQL, Data validating in SQL, Data cleaning in SQL, Combining data in SQL, Summarizing data in SQL) 
+
+Beginning with the three NBA data sets in **Exercise 4** and the information in the link https://uofi.box.com/shared/static/enzji09o5iz1butp3763mcnbaeoyimaa.pdf, do all of the following:
+
+- remove the following variables: tm and stint
+
+- combine the three data sets into a single data set named "nba_1996_2"
+
+- keep the unique players such that all basketball statistics are totaled across all stints per player
+
+- create a new variable called "rebounds" that represents a combination of offensive rebounds and defensive rebounds
+
+- create a new variable called "efficiency" that represents the NBA's efficiency rating using the formula: (points + rebounds + assists + steals + blocks - ((field goals attempted - field goals made) + (free throws attempted - free throws made) + turnovers)) / games played
+
+Now, print the first 5 observations of "nba1996_2" such that the data is sorted by rebounds in descending order then player ID alphabetically and showing the following columns only: player name, player ID, position, age, rebounds. *These columns should be visible in the print out.*
+```{r}
+xyz = sqldf("
+  SELECT *
+  FROM   stint1
+  UNION
+  SELECT *
+  FROM   stint2 
+  ")
+nba1996_2_0 = sqldf("
+  SELECT *
+  FROM   xyz
+  UNION
+  SELECT *
+  FROM   stint3
+  ")
+nba1996_2_0 = sqldf("
+  SELECT Player, PlayerID, Pos, Age, sum(G) as G, sum(GS) as GS,sum(MP) as MP, sum(FG) as FG, sum(FGA) as FGA, sum(ThreeP) as ThreeP,sum(ThreePA) as ThreePA, sum(TwoP) as TwoP,sum(TwoPA) as TwoPA,sum(FT) as FT,sum(FTA) as FTA,sum(ORB) as ORB,sum(DRB) as DRB,sum(AST) as AST,sum(STL) as STL,sum(BLK) as BLK,sum(TOV) as TOV,sum(PF) as PF,sum(PTS) as PTS   
+  FROM   nba1996_2_0
+  GROUP BY Player
+  ")
+nba1996_2_0 = sqldf("
+  SELECT *,(ORB + DRB) as rebounds
+  FROM   nba1996_2_0
+  ")
+nba1996_2_0 = sqldf("
+  SELECT *,(PTS + rebounds + AST + STL + BLK - ((FGA - FG) + (FTA - FT) + TOV) / G) as efficiency
+  FROM   nba1996_2_0
+  ")
+nba1996_2 = sqldf("
+  SELECT Player, PlayerID, Pos, Age, rebounds
+  FROM   nba1996_2_0
+  ORDER BY rebounds desc, PlayerID
+  ")
+head(nba1996_2,n=5)
+```
+
+### Exercise 7
+(Intro to SQL, Assigning data in SQL, Subsetting data in SQL, Arranging data in SQL, Data validating in SQL, Data cleaning in SQL, Combining data in SQL, Summarizing data in SQL) 
+
+Which of the 15 most efficient players in the 1996-1997 season are in the NBA Hall of Fame? Use the "nba_1996_2" data set in **Exercise 6** and information in the link https://www.nba.com/history/hall-of-fame-inductees to answer the question. 
+
+*Make sure your result is sorted by efficiency descending order then player ID alphabetically and only shows the variables referenced in the question.*
+```{r}
+nba1996_2_1 = sqldf("
+  SELECT Player, PlayerID, Pos, Age, rebounds
+  FROM   nba1996_2_0
+  ORDER BY efficiency desc, PlayerID
+  ")
+head(nba1996_2_1,n=15)
+```
+
+**Among the 15 most efficient players in the 1996-1997 season, Karl Malone, Michael Jordan, Grant Hill, Hakeem Olajuwon, Patrick Ewing, Gary Payton, Mitch Richmond, Scottie Pippen, and Allen Iverson are currently in the NBA Hall of Fame.**
+
+### Exercise 8
+(Accessing and importing data, Exploring file formats and different types of data) 
+
+Import the subset of the SBA Business Loans Data using a programming language and the data URL https://uofi.box.com/shared/static/liz915g0j5zeg67of0ykhoa1shwnr2at. Now, print the descriptor portion of the data. *Ensure that date and time formats as well as character encodings (if any) are correct upon importing.*
+
+The subset here (a file with no extension) contains 29669 observations and 27 columns. This is historical data about actual business loans covered by the Small Business Administration (SBA) from years 1970-2013. The observations are small businesses based in Illinois that seek loans to fund their operations, start-up costs, materials, payroll, rent, etc. The SBA works with banks by guaranteeing a portion of the loan to relieve banks of assuming all financial risk. The original sources are the SBA, Min Li, Amy Mickel, and Stanley Taylor. 
+```{r}
+load1 = read_delim("https://uofi.box.com/shared/static/liz915g0j5zeg67of0ykhoa1shwnr2at",
+    "\t", escape_double = FALSE, col_types = cols(ApprovalDate = col_date(format = "%d-%b-%y"), 
+        ChgOffDate = col_date(format = "%d-%b-%y"), 
+        DisbursementDate = col_date(format = "%d-%b-%y"), 
+        DisbursementGross = col_number(), 
+        BalanceGross = col_number(), ChgOffPrinGr = col_number(), 
+        GrAppv = col_number(), SBA_Appv = col_number()), 
+    trim_ws = TRUE)
+str(load1)
+```
+
+
+### Exercise 9
+(Intro to SQL, Assigning data in SQL, Subsetting data in SQL, Arranging data in SQL, Data validating in SQL, Data cleaning in SQL, Combining data in SQL, Summarizing data in SQL)
+
+Using the imported data in **Exercise 8** and the information in the [SBADataKey](https://uofi.box.com/shared/static/1rl69m3pfcj9q47y9ohb3dnyhbcxsu0a.csv), create a subset of the data named "outsiders" such that all of the following are addressed:  
+
+- the approval fiscal year is after 1970 and before 2013  
+
+- the NAICS not corresponding to agriculture, forestry, fishing, and hunting  
+
+- gross approved amount is greater than gross disbursement
+
+- create a new variable called "loandiscrepancy" which equals the absolute difference between gross approved amount and gross disbursement
+
+- the five variables with dollar amounts should be numeric
+
+- keep the following variables: Name, City, State, Bank State, ApprovalFY, and NoEmp.
+
+Now, sort the data by approval year, then print the first 5 observations and the last 5 observations of the "outsiders" data set. *All columns should be visible in the print out.*
+```{r}
+a1 = sqldf("
+                   SELECT *
+                   FROM load1
+                   WHERE ApprovalFY BETWEEN 1970 AND 2013
+                   ")
+
+a2 = sqldf("
+                   SELECT *
+                   FROM a1
+                   WHERE NAICS < 110000 OR NAICS > 119999
+                   ")
+
+a3 = sqldf("
+                   SELECT *, ABS(GrAppv - DisbursementGross) AS loandiscrepancy
+                   FROM a2
+                   WHERE GrAppv > DisbursementGross
+                   ")
+
+outsiders = sqldf("
+                   SELECT Name, City, State, BankState, ApprovalFY, NoEmp
+                   FROM a3
+                   ORDER BY ApprovalFY
+                   ")
+head(outsiders, n=5)
+tail(outsiders, n=5)
+```
+
+### Exercise 10
+(Intro to SQL, Data validating in SQL) 
+
+Using the `outsiders` data in **Exercise 9** and the information in the [SBADataKey](https://uofi.box.com/shared/static/1rl69m3pfcj9q47y9ohb3dnyhbcxsu0a.csv) to create a single dataset that contains only the missing values in the data and their corresponding columns. Now, print the number of unique businesses observations in this dataset.
+```{r}
+missing_vals= sqldf("
+                    Select *
+                    From outsiders
+                    Where BankState is Null")
+missing_vals
+nrow(missing_vals)
+```
+
+***

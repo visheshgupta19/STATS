@@ -1,0 +1,172 @@
+---
+title: 'STAT 440 Homework 1: Solution'
+author: "Vishesh Gupta"
+output:
+  html_document: default
+  pdf_document: default
+---
+# Assignment
+
+Undergraduates are expected to complete **Exercises 1-8**. Graduate students are expected to complete all problems.
+
+## Exercise 1 (Markdown) 
+
+Using Markdown syntax, make a bulleted list with your first name in normal text as the first item, your last name in bold text as the second item, level of study (BS/MS/Phd) as the third item, and field of study (major) as the fourth item.
+
+**Solution:**
+
++ Vishesh
++ (**Gupta**)
++ BS
++ Statistics and Computer Science 
+
+## Exercise 2 (Prior knowledge about using Box, Markdown) 
+
+Take a selfie showing your uncovered face and showing a thumbs up with your left hand. Store the image in your U of I Box account. Next, create a Box link to your image, and show the image as the answer to this problem using the Box link. The image insertion should be done using Markdown syntax. *If you have not created a U of I Box account, please create one by turning the U of I Box service "On" using https://cloud-dashboard.illinois.edu/.* 
+
+**Solution:**
+![](https://uofi.box.com/shared/static/0x3rtpj5mikszbrpn4zsc28tyrn977ai.jpg)
+
+## Exercise 3 (Syllabus, Markdown) 
+
+**(a)** Are students allowed to work together on homework assignments?
+**Solution:YES**
+
+
+**(b)** Are students allowed to share code?
+**Solution:NO**
+
+
+**(c)** What is the "rule of thumb" that I offer to help you maintain academic integrity while completing homework?
+**Solution:Keep every typed word and piece of code your own**
+
+## Exercise 4 (Compass, Markdown) 
+
+**(a)** In an unordered list, give the names of the teaching assistants (TAs) for this course?
+
+**Solution:**
+
++ Diptarka Saha
+
+
+**(b)** Which days of the week are Online Office Hours available from the TAs or Instructor?
+
+**Solution:**
+
++ Monday : (DS)
++ Tuesday : (DU)
++ Wednesday : (DS)
++ Thursday : (DS) and (DU)
+
+
+## Exercise 5 (Prior knowledge about software, Markdown) 
+
+Of the three available software languages (R, SAS, Python), make a numbered list in order of your preference to use in this course, such that the first item is your most preferred and the third item is your least preferred. List all three even if you have never used one or more of them.
+
+**Solution:**
+
+1. Python
+2. R
+3. SAS
+
+## Exercise 6 (Prior knowledge about data, Markdown) 
+
+Consider the information within the image below and the image itself as a data set. It is a photographed image of a crossword puzzle completed by my daughter. Make two lists: one list contains 3 things you know to be true about the data set, and the other list contains 3 questions about the data set (i.e., things you want to know).
+
+![Picture take from *Kids' Puzzles* by Stephen P. Ryder](https://uofi.box.com/shared/static/7e9d74du5fsy838sv074yx0z0lg9lkhs.jpg)
+**Solution:**
+
+
+**3 things you know to be true**
+
+1. There are 9 horizontal rowsand 7 vertical rows
+2. There are 10 pictures of animals
+3. There are 16 names of animals
+
+**3 questions about the data set**
+
+1. What is the text size in which the answers have been written?
+2. How long did it take to complete the puzzle?
+3. What was the age of the person completing the puzzle?
+
+## Exercise 7 (Prior knowledge about data, Markdown) 
+
+Considering the image in **Exercise 6** and using Markdown syntax, create a table that shows how you would organize the data set into tabular form with at least 5 rows and at least 2 columns with column names. 
+
+**Solution:**
+
+*by syntax*
+
+| Horizontal entries      | Vertical entries |
+| ----------- | ----------- |
+| Baboon      | Zebra       |
+| Hyena       | Monkey      |
+| Buffalo     | Hippo       |
+| Lion        | Kudu        |
+| Duiker      | Jackal      |
+
+*as code*
+
+```{r}
+X <- matrix(c('Baboon','Zebra','Hyena','Monkey','Buffalo','Hippo','Lion','Kudu','Duiker','Jackal'),ncol=2,byrow=TRUE)
+result <- as.table(X)
+result
+```
+
+
+## Exercise 8 (Prior knowledge about data, Markdown) 
+
+Consider the information in the image below and the image itself as a data set. ***An image of The New York Times What's Going on in this Graph.*** Make 2 lists: one list contains 3 things you know to be true about the data set, and the other list contains 3 questions about the data set (things you want to know). 
+
+![](https://static01.nyt.com/images/2019/01/17/world/17scarf-print-LN/17scarf-print-LN-superJumbo-v3.jpg?quality=90&auto=webp)
+
+**Solution:**
+
+**3 things you know to be true**
+
+1. The scarf is multi-coloured
+2. There is only one scarf
+3. There are 46 number of lines/blocks for the white and blue colours and 15 number of lines/blocks of the red colours.
+
+**3 questions about the data set**
+
+1. What is the area that is being coverred by each colour on the scarf ?
+2. The length of the scarf ?
+3. What colour dominates the scarf mathematically based on the area and length being coverred ?
+
+## Exercise 9  (Prior knowledge about data, Markdown) 
+
+Consider the information in the image in **Exercise 8** and the image itself as a data set. How would you would organize the data set into tabular form (with rows ad columns)? What would be the column names? What are the observations?
+
+| Colours      | Number_of_lines/blocks |
+| ----------- | ----------- |
+| Red      | 15       |
+| White       | 46      |
+| Blue     | 46       |
+
+
+## Exercise 10  (Prior knowledge about data, Markdown)
+
+Considering your idea for an organized tabular form of the data in **Exercise 9**, describe:    
+
+- a kind of data analysis that is sensible for this data set  
+
+You could obtain a histogram depicting the number of lines/blocks for each colour and obtain the maximum and minimum percentages of number of lines/blocks by doing:
+
++ (number of lines/blocks)/(total number of lines/blocks)
+
+This would give you the following percentages:
+
+1. Blue: 43%
+2. White: 43%
+3. Red: 14%
+
+- what information is needed to help improve the data so that more analysis can be done.
+
+By looking solely at the table in ex9 we can come to the conclusion that the colours White and Blue dominate the scarf however, on looking at the picture one may disagree with the conclusion. 
+Hence to perform better data analysis we need information such as:
+
++ The length of the scarf
++ The area covered by the each colour in the entire scarf
+
+This data will help us analysis further and we could provided an observer with a mathematical answer as to which colour dominates the entire scarf

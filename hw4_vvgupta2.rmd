@@ -1,0 +1,292 @@
+---
+output:
+  pdf_document: default
+  html_document: default
+---
+# STAT 440: Homework 04
+### Spring 2021, D. Unger
+### Due: Monday, April 5 by 11:00 PM CT
+# Assignment
+# NetId: vvgupta2
+
+All students (both undergraduate and graduate) are expected to complete **Exercises 1-10**. 
+
+### Exercise 1
+(Arranging data) Based on the image, which of the following best describes how the data is arranged? ![](https://uofi.box.com/shared/static/r5ewmyqjeg5cof91ryykqnav655gbzna.png)
+
+- sorted by Fips then Date
+
+**- sorted by Date then State**
+
+- sorted by Date then State then Cases
+- sorted by Date only
+
+### Exercise 2
+(Accessing and importing data, Exploring file formats and different types of data) Import the 1996 NBA Season Data (existing as three separate data sets) using one programming language software and the data URLs [stint1](https://uofi.box.com/shared/static/vytgfoo28wf9q4tct61j3sk02pwpsjsn.json), [stint2](https://uofi.box.com/shared/static/3zu8hqubabw8hxqt14qwjpeginf2orgo.json), and [stint3](https://uofi.box.com/shared/static/cfqaufkt73f8iej2v4pf2bsc4b6ok955.json). Now, print the first 5 observations of each separate data set (15 observations total). 
+
+The dataset (three .json files) contains a total of 441 unique observations and 25 columns. The observations are professional basketball players in the National Basketball Association (NBA) and their season statistics for the 1996-1997 season. A stint is the duration of time someone worked for a particular employer. In this basketball data, a stint is a number representing the time a player was with a particular team. Some players are traded during the season, which means they would have more than 1 stint. A player's basketball statistics start over for each stint they have in a season. There are 441 unique playerIDs across all stints. The original source is the NBA and Sports Reference. 
+```{r}
+#install.packages("htm2txt")
+#tinytex::reinstall_tinytex()
+library(tidyverse)
+library(plyr)
+library(dplyr)
+library(data.table)
+library(htm2txt)
+stint1 = jsonlite::fromJSON("https://uofi.box.com/shared/static/vytgfoo28wf9q4tct61j3sk02pwpsjsn.json")
+stint2 = jsonlite::fromJSON("https://uofi.box.com/shared/static/3zu8hqubabw8hxqt14qwjpeginf2orgo.json")
+stint3 = jsonlite::fromJSON("https://uofi.box.com/shared/static/cfqaufkt73f8iej2v4pf2bsc4b6ok955.json")
+head (stint1, n=5)
+head (stint2, n=5)
+head (stint3, n=5)
+```
+
+### Exercise 3 
+(Assigning objects, Subsetting with numbers, Arranging data, Subsetting with characters (i.e. regular expression and string manipulation), Looping and conditional execution, Apply family of functions, Validating data, Cleaning data, Vectorization, Combining data) 
+
+Beginning with the three NBA data sets in **Exercise 2** and the information in the link https://uofi.box.com/shared/static/enzji09o5iz1butp3763mcnbaeoyimaa.pdf, do the following:
+
+a. combine the three data sets into a single data set named **nba1996_1**
+
+b. keep the unique players such that those with latest stints are present, thus removing a player's earlier stints
+
+c. create a new variable called "ato" that represents the assists to turnovers ratio (assists divided by turnovers)
+
+d. create a new variable called "ptm" that represents the points to minutes played ratio (points divided by minutes played)
+
+e. create a new variable called "threeptpercentage" that represents three-point shots made out of three-point attempts multiplied by 100
+
+Finally, print the first 5 observations of **nba1996_1** such that the data is sorted by ptm in descending order then player ID alphabetically and showing the following columns only: player name, player ID, position, age, ptm. 
+```{r}
+nba1996_1 = rbind(stint1, stint2, stint3)
+nba1996_1 = nba1996_1 %>%
+  group_by(Player)%>%
+  slice(which.max(stint))%>%
+  mutate( ato = AST/TOV) %>%
+  mutate( ptm = PTS/MP) %>%
+  mutate( threeptpercentage = (ThreeP/ThreePA)*100) %>%
+  arrange(desc(ptm), PlayerID) %>%
+  select(Player, PlayerID, Pos, Age, ptm)
+head(nba1996_1, 5)
+```
+
+### Exercise 4
+(Assigning objects, Subsetting with numbers, Arranging data, Subsetting with characters (i.e. regular expression and string manipulation), Looping and conditional execution, Apply family of functions, Validating data, Cleaning data, Vectorization, Combining data, Summarizing data) Beginning with the three NBA data sets in **Exercise 2** and the information in the link https://uofi.box.com/shared/static/enzji09o5iz1butp3763mcnbaeoyimaa.pdf, do all of the following:
+
+a. remove the following variables: team id and stint
+
+b. combine the three data sets into a single data set named **nba_1996_2**
+
+c. keep the unique players such that all basketball statistics are totaled across all stints per player
+
+d. create a new variable called "rebounds" that represents a combination of offensive rebounds and defensive rebounds
+
+e. create a new variable called "efficiency" that represents the NBA's efficiency rating using the formula: (points + rebounds + assists + steals + blocks - ((field goals attempted - field goals made) + (free throws attempted - free throws made) + turnovers)) / games played
+
+Finally, print the first 5 observations of **nba1996_2** such that the data is sorted by rebounds in descending order then player ID alphabetically and showing the following columns only: player name, player ID, position, age, rebounds. 
+
+```{r}
+#install.packages("plyr")
+nba_1996_2 = rbind(stint1, stint2, stint3)
+nba_1996_2 = nba_1996_2 %>%
+  select(-c(`Tm`, `stint`)) %>%
+  group_by(`PlayerID`, `Player`, `Pos`) %>%
+  summarise_each(funs(sum))
+something = nba_1996_2 %>%
+  group_by(`PlayerID`) %>%
+  filter(n()>1)
+something = something %>%
+  group_by(`PlayerID`) %>%
+  mutate(Playerposition = paste(Pos, collapse = ",")) %>%
+  group_by(Player, PlayerID, Playerposition) %>%
+  mutate_if(is.numeric, sum) %>%
+  mutate_if(is.character, toString) %>%
+  summarise_all(first) %>%
+  ungroup() %>%
+  select(-c(Playerposition))
+nba_1996_2 = nba_1996_2 %>%
+  group_by(`PlayerID`, `Player`) %>%
+  filter(n()==1)
+nba_1996_2 = rbind(nba_1996_2, something)
+nba_1996_2 = nba_1996_2 %>%
+  mutate(rebounds = ORB + DRB, efficiency = PTS + rebounds + AST + STL + BLK - ((FGA - FG) + (FTA - FT) + TOV) / G)
+
+top5 = nba_1996_2 %>%
+  arrange(desc(rebounds), PlayerID) %>%
+  select(Player, PlayerID, Pos, Age, rebounds)
+
+head(top5, 5)
+```
+
+
+### Exercise 5
+(Assigning objects, Subsetting with numbers, Arranging data, Subsetting with characters (i.e. regular expression and string manipulation), Looping and conditional execution, Apply family of functions, Vectorization) 
+Which of the 15 most efficient players in the 1996-1997 season are currently in the NBA Hall of Fame? Use the **nba_1996_2** data set in **Exercise 4**, information in the link https://www.nba.com/history/hall-of-fame-inductees, and a programming language applying data management concepts to answer the question. 
+
+*Make sure your result is sorted by efficiency descending order then player ID alphabetically and only shows the variables referenced in the question.*
+```{r}
+hall_of_fame = gettxt('https://www.nba.com/history/hall-of-fame-inductees')
+top15 = nba_1996_2 %>%
+  ungroup() %>%
+  slice_max(efficiency, n = 15) %>%
+  mutate(HOF = sapply(Player, grepl, hall_of_fame)) %>%
+  select(c(Player, PlayerID, efficiency, HOF)) %>%
+  arrange(desc(efficiency), Player)
+top15
+```
+
+**Among the 15 most efficient players in the 1996-1997 season, Karl Malone, Michael Jordan, Grant Hill, Hakeem Olajuwon, Patrick Ewing, Gary Payton, Mitch Richmond, Scottie Pippen, and Allen Iverson are currently in the NBA Hall of Fame. **
+
+### Exercise 6
+(Assigning objects, Subsetting with numbers, Arranging data, Subsetting with characters (i.e. regular expression and string manipulation), Looping and conditional execution, Apply family of functions, Vectorization) 
+Beginning with the three NBA data sets in **Exercise 2** and the information in the link https://uofi.box.com/shared/static/enzji09o5iz1butp3763mcnbaeoyimaa.pdf, do all of the following:
+
+a. combine the three data sets into a single data set named **nba_1996_3**
+
+b. each player should be represented exactly once
+
+c. create a new variable called "total.stints" that represents the total number of teams each player played for that season
+
+d. create a new variable called "longest" that represents the team that each player played the most games with; if there is a tie for most games, keep the earliest team he played for.
+
+Finally, print the first 10 observations of **nba1996_3** such that the data is sorted by total.stints in descending order then player ID alphabetically and showing the following columns only: player name, player ID, position, total.stints, longest. 
+
+*Make sure your result is sorted by efficiency descending order then player ID alphabetically and only shows the variables referenced in the question.*
+
+```{r}
+nba_1996_3 = rbind(stint1, stint2, stint3)
+nba_1996_3 = nba_1996_3 %>%
+  ungroup() %>%
+  group_by(`PlayerID`, `Player`,`Tm`, `Pos`) %>%
+  summarise_each(funs(sum))
+ayx = nba_1996_3 %>%
+  group_by(`PlayerID`) %>%
+  filter(n()>1) %>%
+  mutate(longest = Tm[which.max(G)]) %>%
+  group_by(Player, PlayerID, longest) %>%
+  mutate_if(is.numeric, sum) %>%
+  mutate_if(is.character, toString) %>%
+  summarise_all(first) %>%
+  ungroup()
+nba_1996_3 = nba_1996_3 %>%
+  group_by(`PlayerID`, `Player`) %>%
+  filter(n()==1) %>%
+  mutate(longest = Tm)
+nba_1996_3 = rbind(nba_1996_3, ayx)
+nba_1996_3 = nba_1996_3 %>%
+  mutate(total.stints = ifelse(stint == 6, 3, ifelse(stint == 3, 2, 1))) %>%
+  arrange(desc(total.stints), PlayerID)
+top10 = nba_1996_3 %>%
+  select(c(Player, PlayerID, Pos, total.stints, longest))
+head(top10, 10)
+```
+
+
+### Exercise 7 
+(Accessing and importing data, Exploring file formats and different types of data) 
+Import the subsets of the IRI Academic Data (existing as three separate data sets) using one programming language software and the data URLs [ads_demo_big](https://uofi.box.com/shared/static/buv7xuweoq51zw4obcf2netx4d16295h.csv), [trips_big](https://uofi.box.com/shared/static/wmsx1tvrrncryf0ue7ldp4szhizdb3gf.txt), [delivery_stores_big](https://uofi.box.com/shared/static/56bzob5ub1pu5im5fgm1125e4xocbwj2), and the information in the link https://uofi.box.com/shared/static/vmskkej4vt8vy2f17l4zrb9u7y66kpnm.pdf. Print the data description of each separate data set. 
+
+The data all represent sales information and customer demographics captured from select markets in the US in the year 2001. The ads_demo_big data (a .csv file) contain 13983 observations and 20 columns that inform on customer ("panelist") demographics. Panelist ID is a unique identifier. The trips_big data (a .txt file) contain 730040 observations and 4 columns that inform on panelist shopping frequency and how much was spent. The delivery_stores_big data (a file with no extension) contain 1575 observations and 7 columns that inform on the market that the store is in and estimates how much that store sells annually.
+
+```{r, warning=FALSE, message=FALSE}
+data_import_tool <- function(file_location, delimiter){
+  library(tidyverse)
+  if (delimiter==",")
+    readr::read_csv(file_location)
+  else if (delimiter=="comma")
+    readr::read_csv(file_location)
+  else if (delimiter==" ")
+    readr::read_table2(file_location)
+  else if (delimiter=="space")
+    readr::read_table2(file_location)
+  else if (delimiter=="tab")
+    readr::read_tsv(file_location)
+  else if (delimiter=="\t")
+    readr::read_tsv(file_location)
+  else if (delimiter==":")
+    readr::read_delim(file_location, delim = ":")
+  else if (delimiter=="colon")
+    readr::read_delim(file_location, delim = ":")
+}
+ads_demo_big <- data_import_tool("https://uofi.box.com/shared/static/buv7xuweoq51zw4obcf2netx4d16295h.csv", ",")
+trips_big <- data_import_tool("https://uofi.box.com/shared/static/wmsx1tvrrncryf0ue7ldp4szhizdb3gf.txt", "\t")
+delivery_stores_big <- read.table("https://uofi.box.com/shared/static/56bzob5ub1pu5im5fgm1125e4xocbwj2", sep = " ", header = TRUE)
+str(ads_demo_big)
+str(trips_big)
+str(delivery_stores_big)
+```
+
+### Exercise 8
+(Assigning objects, Subsetting with numbers, Arranging data, Subsetting with characters (i.e. regular expression and string manipulation), Looping and conditional execution, Apply family of functions, Vectorization, Combining data, Summarizing data, Markdown) 
+Among the panelists with at least one child aged 0-17 years, which panelists spend at least one hundred dollars  at least 3 different grocery stores in the first 40 weeks of the year? Beginning with the three IRI data sets in **Exercise 7** and the information in the link https://uofi.box.com/shared/static/vmskkej4vt8vy2f17l4zrb9u7y66kpnm.pdf, use a programming language applying data management concepts to show the first 10 observations that answer this question. 
+
+*There should be no missing values in your resulting data. Make sure your resulting data is sorted by panelist ID in ascending order and only the following information: panelist ID, amount of children, dollars spent, store ID, and the fact that it is a grocery store.* 
+
+**In this question we assume for a family to have kids it must consist of 2 parents **
+
+```{r}
+combine123 = inner_join(inner_join(ads_demo_big, trips_big, by = c("Panelist ID" = "PANID")), delivery_stores_big, by = c("IRI_Key" = "IRI_KEY"))
+answer8 = combine123 %>%
+  filter((`Children Group Code` >= 1)&(`Children Group Code` <= 7), (`WEEK` <= 1153)) %>%
+  group_by(`Panelist ID`, `IRI_Key`) %>%
+  filter(CENTS999 >=10000) %>%
+  distinct(`Panelist ID`, `IRI_Key`, .keep_all = TRUE) %>%
+  group_by(`Panelist ID`) %>%
+  filter(n() >= 3) %>%
+  mutate(kids = `Family Size`- 2) %>%
+  arrange(`Panelist ID`) %>%
+  select(c(`Panelist ID`, `kids`, `CENTS999`, `IRI_Key`, `OU`))
+  
+head(answer8, 10)
+#tail(answer8,10)
+```
+
+### Exercise 9
+(Assigning objects, Subsetting with numbers, Arranging data, Subsetting with characters (i.e. regular expression and string manipulation), Looping and conditional execution, Apply family of functions, Vectorization, Combining data, Summarizing data, Markdown) 
+Among any panelists who shop at the same grocery stores, how many panelists - who are renting their homes -  spend more than five hundred dollars in the first 6 months of the year? Beginning with the three IRI data sets in **Exercise 7** and the information in the link https://uofi.box.com/shared/static/vmskkej4vt8vy2f17l4zrb9u7y66kpnm.pdf, use a programming language applying data management concepts to show the first 10 observations that answer this question. The statement "among any panelists who shop at the same grocery stores" means if two people shop at Store1 and 5 people shop at Store2 then these 7 panelists should be included in the result. 
+
+*There should be no missing values in your resulting data. Make sure your resulting data is sorted by panelist ID in ascending order and only the following information: panelist ID, the fact they are renters, and dollars spent.*
+```{r}
+#chnage cents to dollars
+answer9 = combine123 %>%
+  filter((`Type of Residential Possession` == 1), (`WEEK` <= 1139), (`OU` == 'GR')) %>%
+  group_by(`Panelist ID`) %>%
+  mutate(Dollar_Spent = sum(CENTS999)/100) %>%
+  filter(Dollar_Spent >= 500) %>%
+  distinct(`Panelist ID`, `IRI_Key`, .keep_all = TRUE)
+answer9 %>%
+  group_by(`IRI_Key`) %>%
+  filter(n() == 1)
+
+rent500 = answer9 %>%
+  distinct(`Panelist ID`, .keep_all = TRUE) %>%
+  arrange(`Panelist ID`) %>%
+  select(c(`Panelist ID`, `Type of Residential Possession`, `Dollar_Spent`))
+
+head(rent500, 10)
+```
+
+
+### Exercise 10
+(Assigning objects, Subsetting with numbers, Arranging data, Subsetting with characters (i.e. regular expression and string manipulation), Looping and conditional execution, Apply family of functions, Vectorization, Combining data, Summarizing data, Markdown) 
+Which panelists - with more than one person living in their household - spend at least $1000 at 2 or more stores each (if any)? Beginning with the three IRI data sets in **Exercise 7** and the information in the link https://uofi.box.com/shared/static/vmskkej4vt8vy2f17l4zrb9u7y66kpnm.pdf, use a programming language applying data management concepts to show the observations that answer this question. 
+
+*There should be no missing values in your resulting data. Make sure your result is sorted by panelist ID in ascending order and only shows the variables referenced in the question.*
+
+```{r}
+answer10 <- combine123 %>%
+  filter(`Family Size` > 1) %>%
+  group_by(`Panelist ID`, `IRI_Key`) %>%
+  mutate(Dollar_Spent = sum(CENTS999)/100) %>%
+  filter(Dollar_Spent >= 1000) %>%
+  distinct(`Panelist ID`, `IRI_Key`, .keep_all = TRUE) %>%
+  group_by(`Panelist ID`) %>%
+  filter(n() >= 2) %>%
+  arrange(`Panelist ID`) %>%
+  select(c(`Panelist ID`, `Family Size`, `IRI_Key`, `Dollar_Spent`))
+
+head(answer10, 10)
+#length(unique(answer10$'Panelist ID'))
+```
+
+***

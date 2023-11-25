@@ -1,0 +1,87 @@
+---
+output:
+  pdf_document: default
+  html_document: default
+---
+# Vishesh Gupta. Applicant for Master's in Applied Data Science.
+ 
+```{r}
+library(tidyverse)
+library(readr)
+library(dplyr)
+#install.packages("stringr")
+library("stringr") 
+urb_chm <- read_csv("https://uofi.box.com/shared/static/b6u4it6rjdjva4ouk4fps7h7ias0u4eu.csv", col_types = cols(`Inspection Date` = col_date(format = "%m/%d/%Y"), `Expiration Date` = col_date(format = "%m/%d/%Y")))
+#View(urb_chm)
+```
+
+```{r}
+urb_chm$Latitude = latitude1 = as.numeric(str_extract(urb_chm$`Mappable Address`, "4\\d+\\.\\d+"))
+urb_chm$Longitude = longitude1 = as.numeric(str_extract(urb_chm$`Mappable Address`, "\\-\\d+\\.+\\d+"))
+mapad = str_replace(urb_chm$`Mappable Address`,"\\(\\-\\d+\\.+\\d+",paste0("(",latitude1))
+urb_chm$`Mappable Address` = str_replace(mapad,"4\\d+\\.\\d+\\)", paste0(longitude1,")"))
+urb_chm = subset(urb_chm, select = -c(Latitude,Longitude) )
+head(urb_chm, n=5)
+```
+
+```{r}
+lat1 <- as.numeric(str_extract(urb_chm$`Mappable Address`, "4\\d+\\.\\d+"))
+lon1 <- as.numeric(str_extract(urb_chm$`Mappable Address`, "\\-\\d+\\.+\\d+"))
+lat1[1:5]
+lon1[1:5]
+r = 6371000
+lat2 = rep(40.1106, length(lat1))
+lat_dif = (lat2-lat1)* (pi/180)
+lon2 =rep(-88.2073, length(lon1))
+lon_dif = (lon2-lon1) * (pi/180)
+a =(sin(lat_dif/2)*sin(lat_dif/2))+cos(lat2)*cos(lat1)*(sin(lon_dif/2)*sin(lon_dif/2))
+c= 2*atan2(sqrt(a),sqrt(1-a))
+d=c*r/1609
+urb_chm$distance2downtown=d
+```
+
+```{r}
+a = c(summary(urb_chm$distance2downtown),sd(urb_chm$distance2downtown, na.rm = TRUE))
+names(a) = c(names(summary(urb_chm$distance2downtown)),"std")
+a
+```
+
+
+```{r,warning=FALSE, message=FALSE}
+library(readr)
+cham_county <- read_delim("https://uofi.box.com/shared/static/lbah1aw0cwghyrelzur0tk3akh65tin6.txt", "|", escape_double = FALSE, col_types = cols(booking_date = col_date(format = "%m/%d/%Y"), booking_time = col_time(format = "%H:%M:%S"), released_date = col_date(format = "%m/%d/%Y"), released_time = col_time(format = "%H:%M:%S")), trim_ws = TRUE)
+```
+
+```{r}
+cham_county_2 <- cham_county %>%
+  mutate(booking_datetime = as.POSIXct(paste(booking_date, booking_time))) %>%
+  mutate(released_datetime = as.POSIXct(paste(replace_na(released_date, as.Date("2020-08-01")), released_time))) %>%
+  mutate(years_jail = as.numeric(difftime(released_datetime, booking_datetime, units = "days")) %/% 365) %>%
+  mutate(days_jail = floor(as.numeric(difftime(released_datetime, booking_datetime, units = "days")) %% 365)) %>%
+  mutate(hours_jail = floor(as.numeric(difftime(released_datetime, booking_datetime, units = "hours")) %% 24)) %>%
+  mutate(minutes_jail = floor(as.numeric(difftime(released_datetime, booking_datetime, units = "mins")) %% 60)) %>%
+  mutate(seconds_jail = floor(as.numeric(difftime(released_datetime, booking_datetime, units = "secs")) %% 60)) %>%
+  mutate(time_spent_in_jail1 = years_jail*365*24 + days_jail*24 + hours_jail + minutes_jail/60 + seconds_jail/(60*60)) %>%
+  mutate(time_spent_in_jail2 = as.numeric(difftime(released_datetime, booking_datetime, units = "hours")))
+```
+
+```{r}
+result = cham_county_2 %>%
+  select(c(`jacket_number`, `booking_date`, `booking_time`, `released_date`, `released_time`, `time_spent_in_jail1`, `time_spent_in_jail2`))
+```
+
+```{r}
+cc <- cham_county %>%
+  filter(city == "CHAMPAIGN" | city == "RANTOUL" | city == "SAVOY" | city == "URBANA") %>%
+  select(jacket_number, `age arrest`, city, state, sex, race)
+cc$city = sort(cc$city, decreasing = TRUE)
+```
+
+```{r}
+bp = cham_county_2[cham_county_2$race == 'Black',]
+nbp = cham_county_2[cham_county_2$race != 'Black',]
+mean(bp$time_spent_in_jail1, na.rm=TRUE)
+mean(nbp$time_spent_in_jail1, na.rm = TRUE)
+```
+
+

@@ -1,0 +1,323 @@
+# STAT 440: Homework 02
+### Spring 2021, D. Unger
+### Due: Monday, February 22 by 11:00 PM CT
+
+### Vishesh Gupta, vvgupta2
+
+```{r, message=FALSE, echo=FALSE}
+library(tidyverse)
+library(readr)
+library('jsonlite')
+library("rjson")
+```
+
+### Exercise 1 (Markdown) 
+
+**#1** (Personal interest survey) 
+- If I offered in-person office hours for students in this course, would you be interested in attending? 
+**Yes**
+
+- If I offered an online Zoom or Slack or discussion board environment for students in this course  (and no instructor or TA to interfere) to just hang out and get to know each other, would you be interested in attending? 
+**Yes Slack/Discord**
+
+
+**#2** (File Formats and Extensions, Accessing and Importing Data) Import the subset of the SBA Business Loans Data using a programming language and the data URL https://uofi.box.com/shared/static/liz915g0j5zeg67of0ykhoa1shwnr2at. Now, print the first 5 observations and the descriptor portion of the whole data. *Ensure that date and time formats as well as character encodings (if any) are correct upon importing.*
+
+
+```{r, , message=FALSE, warning=FALSE}
+load1 <- read_delim("https://uofi.box.com/shared/static/liz915g0j5zeg67of0ykhoa1shwnr2at", 
+    "\t", escape_double = FALSE, col_types = cols(ApprovalDate = col_date(format = "%d-%b-%y"), 
+        ChgOffDate = col_date(format = "%d-%b-%y"), 
+        DisbursementDate = col_date(format = "%d-%b-%y"), 
+        DisbursementGross = col_number(), 
+        BalanceGross = col_number(), ChgOffPrinGr = col_number(), 
+        GrAppv = col_number(), SBA_Appv = col_number()), 
+    trim_ws = TRUE)
+head(load1, 5)
+```
+
+The subset here (a file with no extension) contains 29669 observations and 27 columns. This is historical data about actual business loans covered by the Small Business Administration (SBA) from years 1970-2013. The observations are small businesses based in Illinois that seek loans to fund their operations, start-up costs, materials, payroll, rent, etc. The SBA works with banks by guaranteeing a portion of the loan to relieve banks of assuming all financial risk. The original sources are the SBA, Min Li, Amy Mickel, and Stanley Taylor. 
+
+**#3** (Assigning, Subsetting, Formatting Data) Using the imported data in **Exercise 2** and the information in the [SBADataKey](https://uofi.box.com/shared/static/1rl69m3pfcj9q47y9ohb3dnyhbcxsu0a.csv), create a subset of the data named "outsiders" such that all of the following are addressed:  
+
+```{r}
+load2 = read_csv("https://uofi.box.com/shared/static/1rl69m3pfcj9q47y9ohb3dnyhbcxsu0a.csv")
+```
+
+```{r}
+names(load1)
+```
+
+a. the approval fiscal year is after 1970 and before 2013  
+
+b. the NAICS not corresponding to agriculture, forestry, fishing, and hunting  
+
+c. gross approved amount is greater than gross disbursement
+
+d. create a new variable called "loandiscrepancy" which equals the absolute difference between gross approved amount and gross disbursement
+
+e. the five variables with dollar amounts should not show a dollar sign (only the dollar amount with two decimal places & commas do not matter)  
+
+f. keep the following variables: Name, City, State, Bank State, ApprovalFY, and NoEmp.
+
+```{r, , message=FALSE, warning=FALSE}
+outsiders = load1 %>%
+  filter(ApprovalFY > 1970 & ApprovalFY < 2013) %>%
+  filter(NAICS < 110000 | NAICS > 119999) %>%
+  filter(GrAppv > DisbursementGross) %>%
+  mutate(loandiscrepancy = abs(GrAppv - DisbursementGross)) %>%
+  select(Name, City, State, BankState, ApprovalFY, NoEmp)
+```
+```{r}
+names(outsiders)
+```
+
+Now, print the first 5 observations and the last 5 observations of the "outsiders" data set. *All columns should be visible in the print out.*
+```{r}
+head(outsiders, n=5)
+tail(outsiders, n=5)
+```
+
+**#4** (File Formats and Extensions, Accessing and Importing Data) Import the Trump Tweets Data using a programming language and the data URL https://uofi.box.com/shared/static/xu6tke7xz7v9hdax35j2gykacc5v81kd.json. Now, print the first and the last observations and the descriptor portion for the whole data. *Ensure that date and time formats as well as character encodings (if any) are correct upon importing.*
+
+Also, read through the information in the links  [link1](http://www.trumptwitterarchive.com/about) and [link2](https://help.twitter.com/en/glossary) to become more familiar with the Trump Tweets Data. This particular dataset (a .json file) contains 4750 observations and 7 columns. The observations are tweets by the US President Donald Trump. These particular tweets were posted between January 1, 2020 and May 31, 2020. There is metadata associated with each tweet such as the date and time of the tweet, whether it is a retweet, number of times the tweet was favorited, and the tweet source (device). The original source is Brendan Brown's Trump Twitter Archive.
+
+
+```{r, , message=FALSE, warning=FALSE}
+tweet_data <- jsonlite::fromJSON("https://uofi.box.com/shared/static/xu6tke7xz7v9hdax35j2gykacc5v81kd.json")
+Sys.setlocale("LC_TIME", "English")
+tweet_data$created_at <- as.POSIXct(tweet_data$created_at, format = "%a %b %d %H:%M:%S %z %Y", tz="GMT")
+head(tweet_data, 5)
+tail(tweet_data, 5)
+```
+
+
+**#5** (Assigning, Subsetting, Arranging, Formatting Data) Below is a list of words or phrases that represent or reflect patriotism in an American context. Using the imported data in **Exercise 4** and a programming language, determine the number of times each entry of the Word or Phrase column in the table is used. *Keep in mind that the case of the words should not matter; meaning America and america are the same word.* Is the raw total count of patriotic terms greater than the number of tweets?
+
+|Word or Phrase |
+|---|
+|all-American |
+|allegiance |
+|America |
+|American |
+|brave |
+|bravery |
+|country |
+|courage |
+|courageous |
+|flag |
+|flag-waving |
+|freedom |
+|hero |
+|heroes |
+|home of the brave |
+|land of the free |
+|love of country |
+|nation |
+|national |
+|patriot |
+|patriotic |
+|red-blooded |
+|stars and stripes |
+|US |
+|USA |
+|United States |
+
+```{r, , message=FALSE, warning=FALSE}
+phrases = c("all-American", "allegiance", "America", "American", "brave", "bravery", "country", "courage", "courageous", "flag", "flag_waving", "freedom", "hero", "heroes", "home of the brave", "land of the free", "love of country", "nation", "national", "patriot", "patriotic", "red-blooded", "stars and stripes", "US", "USA", "United States")
+tweets = tolower(tweet_data$text)
+total = data.frame(phrases, 'count'=0)
+for(i in seq(1,length(phrases), by=1)){
+  total$count[i] = (sum(str_count(tweets,tolower(phrases[i]))))
+}
+sum(total$count)
+  
+```
+
+**By calculating the dimensions we notice that there are 4750 tweets however we see that the phrases have a total occurrence of 4355 thereby we can conclude that the raw total count of patriotic terms is not greater than the number of total tweets**
+
+**#6** (File Formats and Extensions, Accessing and Importing Data) Import the Chicago Food Inspections Data using a programming language and the data URL https://uofi.box.com/shared/static/rtys18ia66k3x51g0z31eqxmr79p5yvo.txt. Now, print the last 5 observations, the descriptor portion for the whole data, and read through the information in the links  [link1](https://data.cityofchicago.org/api/assets/BAD5301B-681A-4202-9D25-51B2CAE672FF) and [link2](http://dev.cityofchicago.org/open%20data/data%20portal/2018/06/29/food-violations-changes.html) to become more familiar with the Chicago Food Inspections Data. *Ensure that date and time formats as well as character encodings (if any) are correct upon importing.* 
+
+```{r, , message=FALSE, warning=FALSE}
+inspect_food = read_delim("https://uofi.box.com/shared/static/rtys18ia66k3x51g0z31eqxmr79p5yvo.txt", 
+    "&", escape_double = FALSE, col_types = cols(`Inspection Date` = col_date(format = "%m/%d/%Y")), 
+    trim_ws = TRUE)
+```
+
+```{r}
+tail(inspect_food, n=5)
+```
+
+This dataset (a .txt file) contains 187787 observations and 22 columns. The observations are places that serve food including grocery stores, butchers, bakeries, restaurants, school cafeterias, gas stations, and delis throughout the city limits of Chicago. These establishments pass, fail, or have certain conditions associated with passing the inspection. The original source is the City of Chicago Data Portal. 
+
+**#7** (Assigning, Subsetting, Arranging, Formatting Data) Using the imported data in **Exercise 6** and the information in the links  [link1](https://data.cityofchicago.org/api/assets/BAD5301B-681A-4202-9D25-51B2CAE672FF) and [link2](http://dev.cityofchicago.org/open%20data/data%20portal/2018/06/29/food-violations-changes.html), create a subset of the data named "inspections" such that all of the following are addressed:  
+
+a. create a new variable called "total_violations" that counts the number of violations each business had  
+
+b. create a new variable called "pass_or_not" that equals 1 if the restaurant passes the inspection, 0 if the restaurant passes with conditions, 0 if the restaurant fails, and NA otherwise
+
+c. limit inspection dates to before July 1, 2018  
+
+d. remove the following variables: Address, Census Tracts, City, Community Areas, Historical Wards 2003-2015, Location, State, Wards, Zip Codes  
+
+e. remove all missing values among the remaining variables (e.g. if one field is missing a value for a single row, then that row must be removed)
+
+Now, print the first 5 observations and the last 5 observations of the "inspections" data set. *All columns should be visible in the print out.*
+```{r, , message=FALSE, warning=FALSE}
+#names(load3)
+inspections = inspect_food %>%
+  mutate(total_violations = 1+str_count(Violations, "|"))%>%
+  filter(`Inspection Date` < "2018-07-01")%>%
+  select(`Inspection ID`, `DBA Name`, `AKA Name`, `License #`, `Facility Type`, Risk, Zip, `Inspection Date`, `Inspection Type`, Results, Violations, Latitude, Longitude, total_violations)%>%
+  mutate(pass_or_not = case_when(Results=="Fail" ~ "0",
+         Results == "Pass" ~ "1",
+         Results == "Pass w/ Conditions" ~ "0",
+         TRUE ~ "NA"))
+
+inspections = na.omit(inspections)
+```
+```{r}
+head(inspections, n=5)
+tail(inspections, n=5)
+```
+
+**#8** (Assigning, Subsetting, Arranging, Formatting Data) Beginning with the "inspections" data in **Exercise 7** and the information in the links  [link1](https://data.cityofchicago.org/api/assets/BAD5301B-681A-4202-9D25-51B2CAE672FF) and [link2](http://dev.cityofchicago.org/open%20data/data%20portal/2018/06/29/food-violations-changes.html), create a subset of the data named "inspections2" such that all of the following are addressed:  
+
+a. sort the data by "aka name", "license #" and inspection date such that the most recent inspections occur first and businesses with repeat inspections have their most recent inspections appear first and among these businesses their name appears in alphabetical order 
+
+b. remove the following variables: "dba name" and zip if not already removed  
+```{r, , message=FALSE, warning=FALSE}
+names(inspections)
+```
+```{r, , message=FALSE, warning=FALSE}
+inspections2 = inspections %>%
+  arrange(desc(`Inspection Date`), `AKA Name` ) %>%
+  select(-c(`DBA Name`,Zip))
+```
+```{r, , message=FALSE, warning=FALSE}
+names(inspections2)
+```
+```{r, , message=FALSE, warning=FALSE}
+head(inspections2,20)
+tail(inspections2,5)
+```
+
+c. add a new variable called "critical_violations" that counts the number of critical violations using the following code
+
+```
+#R users
+library(tidyverse)
+
+#Ignore the first violations
+
+additionalviolations <- str_extract_all(inspections$Violations, "\\| (\\d+)[.]", simplify=TRUE)
+
+criticalviolations <- rep(0, length(inspections$Violations))
+
+for(j in 1:nrow(additionalviolations)){
+  criticalviolations[j] <- sum(as.numeric(str_remove(additionalviolations[j,], "[^\\d]."))<15, na.rm = TRUE)
+}
+```
+
+```
+#Python users
+add_violat = inspections.Violations.str.findall("\\| (\\d+)[.]") 
+
+import re
+
+n = len(inspections)
+cri_violat = [0]*n
+for j in range(n):
+    if isinstance(add_violat.iloc[j],float): # add_violat.iloc[j] might be nan value
+        cri_violat[j] =0
+    else:
+        cri_violat[j] = sum([int(x)<15 for x in add_violat.iloc[j]])
+```
+
+d. add a new variable called "serious_violations" that counts the number of serious violations using the following code 
+
+```
+#R users
+library(tidyverse)
+
+#Ignore the first violations
+
+additionalviolations <- str_extract_all(inspections$Violations, "\\| (\\d+)[.]", simplify=TRUE)
+
+seriousviolations <- rep(0, length(inspections$Violations))
+
+for(j in 1:nrow(additionalviolations)){
+  seriousviolations[j] <- sum(as.numeric(str_remove(additionalviolations[j,], "[^\\d]."))>14 & as.numeric(str_remove(additionalviolations[j,], "[^\\d]."))<30, na.rm = TRUE)
+}
+```
+
+```
+#Python users
+add_violat = inspections.Violations.str.findall("\\| (\\d+)[.]") 
+
+import re
+
+n = len(inspections)
+serious_violat = [0]*n
+for j in range(n):
+    if isinstance(add_violat.iloc[j],float): # add_violat.iloc[j] might be nan value
+        serious_violat[j] =0
+    else:
+        serious_violat[j] = sum([14<int(x)<30 for x in add_violat.iloc[j]])
+```
+
+e. add a new variable called "violation_severity" that equals 1 if the restaurant has either a critical or a serious violation or both and equals 0 if the restaurant does not have either a critical or serious violation
+Now, print the first, fifth, and tenth observations of the "inspections2" data set. *All columns should be visible in the print out.*
+```{r}
+#R users
+library(tidyverse)
+additionalviolations <- str_extract_all(inspections$Violations, "\\| (\\d+)[.]", simplify=TRUE)
+criticalviolations <- rep(0, length(inspections$Violations))
+for(j in 1:nrow(additionalviolations)){
+  criticalviolations[j] <- sum(as.numeric(str_remove(additionalviolations[j,], "[^\\d]."))<15, na.rm = TRUE)
+}
+```
+
+```{r}
+#R users
+library(tidyverse)
+additionalviolations <- str_extract_all(inspections$Violations, "\\| (\\d+)[.]", simplify=TRUE)
+seriousviolations <- rep(0, length(inspections$Violations))
+for(j in 1:nrow(additionalviolations)){
+  seriousviolations[j] <- sum(as.numeric(str_remove(additionalviolations[j,], "[^\\d]."))>14 & as.numeric(str_remove(additionalviolations[j,], "[^\\d]."))<30, na.rm = TRUE)
+}
+```
+
+```{r, , message=FALSE, warning=FALSE}
+inspections2 = inspections2 %>%
+  mutate(seriousviolations = seriousviolations) %>%
+  mutate(criticalviolations = criticalviolations)%>%
+  mutate(violation_severity = ifelse(criticalviolations == 0 & seriousviolations == 0, 0,1))
+
+rbind(inspections2[1,], inspections2[5,], inspections2[10,])
+```
+
+**#9** (Assigning, Subsetting, Arranging, Formatting Data, Msrkdown) Among the 10 businesses with the most total violations, which type of facility was the most common? Which 10 businesses had the most serious violations? Which 10 businesses had the most critical violations? Is the business with the most critical violations the same as the business with the most serious violations? 
+
+Use the "inspections2" data in **Exercise 8**, the information in the links [link1](https://data.cityofchicago.org/api/assets/BAD5301B-681A-4202-9D25-51B2CAE672FF) and [link2](http://dev.cityofchicago.org/open%20data/data%20portal/2018/06/29/food-violations-changes.html), and a programming language applying data management concepts to answer the preceding questions. *Your answer should be in paragraph form in Markdown syntax and your code should show results as evidence. When printing the data, all columns should be visible in the print out.*
+
+```{r, , message=FALSE, warning=FALSE}
+(arrange(inspections2,desc(inspections2$total_violations))[1:10,])$`Facility Type`
+Serious = arrange(inspections2,desc(inspections2$seriousviolations))
+head(Serious$`AKA Name`, 10)
+Critical = arrange(inspections2,desc(inspections2$criticalviolations))
+head(Critical$`AKA Name`, 10)
+```
+
+**From the above results we can come the following conclusions: We note that among the 10 businesses with the most total violations the most common faccilty is : Restaurant. Additionally we see that the business with the most critical violations is not the same as the business with the most serious violations**
+
+**#10** (Assigning, Subsetting, Arranging, Formatting Data) According to the Chicago Department of Public Health, "establishments receiving a 'pass' were found to have no critical or serious violations". 
+
+Beginning with the "inspections2" data in **Exercise 8** and the information in the links  [link1](https://data.cityofchicago.org/api/assets/BAD5301B-681A-4202-9D25-51B2CAE672FF) and [link2](http://dev.cityofchicago.org/open%20data/data%20portal/2018/06/29/food-violations-changes.html), check whether the Chicago Department of Public Health statement above is true in the "inspections2" data set. If their statement is false, create a dataset called "falsehoods" that contains all observations that violate their statement and print the first 10 observations. *All columns should be visible in the print out.* If their statement is true, do nothing. 
+
+```{r, , message=FALSE, warning=FALSE}
+falsehoods =inspections2 %>%
+  filter((criticalviolations == 0 & seriousviolations == 0 & pass_or_not == 0) | ((criticalviolations != 0 | seriousviolations != 0) & pass_or_not == 1))
+falsehoods
+```
+***
