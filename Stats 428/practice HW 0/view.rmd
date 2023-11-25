@@ -1,0 +1,82 @@
+---
+title: 'STAT 428 Homework 0: Solution'
+author: "Vishesh Gupta"
+date: "1/31/2021"
+output:
+  pdf_document: default
+  html_document:
+    df_print: paged
+  word_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Exercise
+
+Below are a few toy problems. You can type your answers under each problem.
+If you like, you can submit your .Rmd and .pdf files on Gradescope. I'll read them.
+
+### Problem 1
+
+(a) Using bullet points, list two reasons you are taking this course.
+
++ This is one of my major requirements.
++ I want to further understand the importance of statistics and its application in ML while developing my R skills. 
+
+(b) Using a numbered list, tell me two things about you (e.g., what you are interested in, what you do for fun during the pandemic, any questions/concerns about the course). 
+
+(1) I love playing soccer and have my own youtube channel
+(2) I have one dog which is a maltese
+
+
+### Problem 2
+
+What is the PDF of a normal RV $X\sim N(\mu, \sigma^2)$? Write it as a LaTeX equation block.
+
+$$f_X(x) = \frac{1}{\sqrt{2\pi}\sigma}e^{-\frac{(x-\mu)^2}{2\sigma^2}},   ~~~~~~\infty<x<\infty$$
+
+
+### Problem 3
+
+Make a code chunk: Create a function that takes $x, \mu, \sigma$ as inputs and outputs $f(x)$, the density of $x$ under $N(\mu, \sigma^2)$. Try not to use built-in functions like `dnorm()`.
+
+```{r normal_pdf}
+
+norm_density <- function(x, mu, sigma){
+  
+  d = 1/(sqrt(2*pi)*sigma)*exp(-(x-mu)^2/(2*sigma^2))
+  
+  return(d)
+}
+
+# Check: does it produce same value as dnorm?
+
+# f(1) for X~N(0,1^2)
+norm_density(x=1,mu=0,sigma=1)
+dnorm(1,mean = 0,sd = 1)
+
+# f(5) for X~N(3,5^2)
+norm_density(x=5,mu=3,sigma=5)
+dnorm(5,mean = 3, sd = 5)
+
+```
+
+
+### Problem 4
+
+Make a code chunk: Using the function from Problem 3, plot the PDF of $X\sim N(0,1)$ between $-4$ and $4$.
+
+
+```{r sdnorm_plot}
+
+x = seq(-4,4,.01)
+fx = norm_density(x,mu=0,sigma=1)
+plot(x,fx, type = 'l', xlab = 'x', ylab = 'f(x)')
+
+```
+
+
+
+

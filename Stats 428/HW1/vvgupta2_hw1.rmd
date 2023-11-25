@@ -1,0 +1,187 @@
+---
+title: 'STAT 428 Homework 1: Solution'
+author: "Vishesh Gupta"
+date: "2/07/2021"
+output:
+  pdf_document: default
+  html_document:
+    df_print: paged
+  word_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Exercise
+
+Below are a few toy problems. You can type your answers under each problem.
+If you like, you can submit your .Rmd and .pdf files on Gradescope. I'll read them.
+
+### Problem 1
+```{r}
+#install.packages("LaplacesDemon")
+#install.packages("VGAM")
+```
+
+```{r}
+qlaplace <- function (u, mu, std){
+  x <- mu - (std * (sign(u - 0.5)) * (log(1 - (2*(abs(u - 0.5))))))
+  return (x)
+}
+```
+```{r}
+u = runif(n = 1000)
+head(u)
+```
+```{r}
+mu = 1
+std = 2
+X <- qlaplace(u, mu, std)
+head(X)
+```
+```{r}
+library(LaplacesDemon)
+library(VGAM)
+```
+```{r}
+hist (X, freq = F)
+xx <- seq(-15,15,.01)
+fx <- dlaplace(xx, 1, 2)
+lines(xx,fx, type = 'l', col = 'red')
+```
+
+### Problem 2
+```{r}
+qrayl <- function (u1, std1){
+  x <- sqrt(-2 * (std1^2) * log(u1))
+  return (x)
+}
+```
+```{r}
+u1 = runif(n = 1000)
+head(u1)
+```
+```{r}
+std1 = 0.5
+std2 = 2
+std3 = 100
+X1 <- qrayl(u1, std1)
+X2 <- qrayl(u1, std2)
+X3 <- qrayl(u1, std3)
+```
+```{r}
+hist (X1, freq = F)
+xx <- seq(0,1.5,.01)
+fx <- drayleigh(xx, 0.5)
+lines(xx,fx, type = 'l', col = 'red')
+```
+```{r}
+hist (X2, freq = F)
+xx <- seq(0,7,.01)
+fx <- drayleigh(xx, 2)
+lines(xx,fx, type = 'l', col = 'red')
+```
+```{r}
+hist (X3, freq = F)
+xx <- seq(0,350,.01)
+fx <- drayleigh(xx, 100)
+lines(xx,fx, type = 'l', col = 'red')
+```
+
+
+### Problem 3
+```{r}
+dic <- function(u, p){
+  Fx <- cumsum (p)
+  m <- length (p)
+  x <- 1
+  for ( i in 1:m){
+    x <- x + (u > Fx[i])
+  }
+  return (x)
+}
+```
+```{r}
+U <- runif(1000)
+head(U)
+```
+```{r}
+probs <- c(0.1, 0.2, 0.2, 0.2, 0.3)
+X_dic <- dic (U, p = probs)
+head(X_dic)
+```
+```{r}
+table(X_dic)/1000
+```
+**using the R function**
+```{r}
+X_sample <- sample (x = 1:5, size = 1000, prob = probs, replace = T)
+table(X_sample)/1000
+```
+
+### Problem 4
+
+```{r}
+Z <- rnorm(1000)
+Z1 <- matrix ( rnorm (1000*30), nrow = 1000, ncol = 30)
+X <- rowSums(Z1)
+v <- 30
+T <- Z / (sqrt (X/v))
+```
+
+```{r}
+hist(T, freq = F)
+xx <- seq(-20,20,10)
+lines(xx, dt(xx,df = 30), type = "line", col = "red")
+```
+
+```{r}
+ps <- seq(0.05, 0.95, by = 0.05)
+theo <- qt(ps, df = 30)
+obs <- quantile(X, probs=ps)
+plot(theo, obs)
+```
+
+### Problem 5
+
+```{r}
+dmd = function(p){
+  X <- 1 * ((1-p)<runif(1000))
+  means <- c(3,0)
+  stds <- c(1,1)
+  result <- rnorm (1000, means[X+1], stds[X+1] )
+  hist(result)
+}
+```
+```{r}
+dmd(0.75)
+```
+```{r}
+dmd(0.25)
+```
+
+
+**it is not bi-modal since we see no twin peaks**
+
+### Problem 6
+
+```{r}
+z <- matrix (rnorm(1000*3), nrow = 1000, ncol = 3)
+mu <- matrix (c(0,1,2), nrow = 1000, ncol = 3, byrow=T)
+sig <- matrix (c(1,-0.5,0.5,-0.5,1,-0.5,0.5,-0.5,1), nrow = 3, ncol = 3)
+A <- chol(sig)
+x <- z%*%A + mu
+```
+
+```{r}
+round(cov(x),3)
+```
+```{r}
+round(colMeans(x),3)
+```
+
+```{r}
+pairs(x)
+```
+ **We can thereby notice that the visual plots agree with the covariance matrix**
